@@ -36,5 +36,5 @@ for indekso, vorto in enumerate(vortaj_nomoj):
 dosiero_json = json.dumps(kolektitaj_datumoj, indent=2, ensure_ascii=False)
 
 # Kreu la dosieron Json
-with open("bonalingvo.json", "w", encoding="utf8") as dosiero:
+with open("rezulto/bonalingvo.json", "w", encoding="utf8") as dosiero:
     dosiero.write(dosiero_json)
