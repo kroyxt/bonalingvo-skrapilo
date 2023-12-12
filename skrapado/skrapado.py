@@ -2,19 +2,20 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import json
-from skrapado.constants import BASA_LIGILO, ELIGA_VOJO
+import os
+import skrapado.konstantoj as konst
 
 
-class BonalingvoSkrapado:
+class BonalingvoSkrapado(BeautifulSoup):
     def __init__(self):
-        self.peto = requests.get(BASA_LIGILO).text
-        self.soup = BeautifulSoup(self.peto, "lxml")
+        self.peto = requests.get(konst.BASA_LIGILO).text
+        super(BonalingvoSkrapado, self).__init__(self.peto, "lxml")
+        self.kolektataj_datumoj = []
 
     def kolektu_vortajn_datumojn(self):
-        vortujo = self.soup.find("div", {"id": "tuta"}).dl
+        vortujo = self.find("div", {"id": "tuta"}).dl
         krudaj_vortaj_nomoj = vortujo.find_all("dt")
         vortaj_enhavoj = vortujo.find_all("dd")
-        datumoj = []
 
         for indekso, vorto in enumerate(krudaj_vortaj_nomoj):
             krudaj_datumoj = vorto.text.replace(":", "").strip().split(" ")
@@ -28,11 +29,16 @@ class BonalingvoSkrapado:
                 "aldono": re.sub(r"[\[\]]", "", aldono),
                 "enhavo": enhavo
             }
-            datumoj.append(rezulta_skrapado)
+            self.kolektataj_datumoj.append(rezulta_skrapado)
 
-        return datumoj
+    def kreu_dosieron_json(self):
+        datumoj_json = json.dumps(self.kolektataj_datumoj, indent=2, ensure_ascii=False)
+        vojo = os.getcwd()
+        kunigita_vojo = os.path.join(vojo, konst.DOSIERUJO)
+        if not os.path.exists(kunigita_vojo):
+            os.mkdir(kunigita_vojo)
 
-    def kreu_dosieron_json(self, datumoj):
-        datumoj_json = json.dumps(datumoj, indent=2, ensure_ascii=False)
-        with open(ELIGA_VOJO, "w", encoding="utf8") as dosiero:
+        with open(os.path.join(kunigita_vojo, "bonalingvo.json"), "w", encoding="utf8") as dosiero:
             dosiero.write(datumoj_json)
+
+        print("Skrapado finita.")
